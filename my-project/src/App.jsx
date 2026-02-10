@@ -7,14 +7,23 @@ import Contact from './pages/Contact'
 function App() {
   return (
     <Router>
-      <nav style={{ padding: '1rem', backgroundColor: '#333', marginBottom: '1rem' }}>
-        <Link to="/" style={{ color: 'white', marginRight: '1rem' }}>Home</Link>
-        <Link to="/about" style={{ color: 'white', marginRight: '1rem' }}>About</Link>
-        <Link to="/contact" style={{ color: 'white' }}>Contact</Link>
+      <nav
+        style={{
+          padding: '1rem',
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'blur(10px)',
+        }}
+      >
+        <Link to="/" style={{ color: 'white', marginRight: '1rem', textDecoration: 'none' }}>
+          Home
+        </Link>
+        <Link to="/about" style={{ color: 'white', marginRight: '1rem', textDecoration: 'none' }}>
+          About
+        </Link>
+        <Link to="/contact" style={{ color: 'white', textDecoration: 'none' }}>
+          Contact
+        </Link>
       </nav>
-<h1 className="text-3xl font-bold underline">
-    Hello world!
-  </h1>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
