@@ -12,14 +12,17 @@ function App() {
     <Router>
       <nav
         style={{
-          position: 'sticky',
+          position: 'fixed',
           top: 0,
-          zIndex: 50,
-          padding: '0.75rem 1.5rem',
-          backgroundColor: 'rgba(15, 23, 42, 0.75)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          height: '4rem',
+          padding: '0 2rem',
+          backgroundColor: 'rgba(15, 23, 42, 0.8)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          borderBottom: '1px solid #334155',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -32,16 +35,16 @@ function App() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.4rem',
-              color: 'white',
-              marginRight: '1.5rem',
+              gap: '0.5rem',
+              color: '#ffffff',
+              marginRight: '2rem',
               textDecoration: 'none',
               fontWeight: 700,
-              fontSize: '1.15rem',
+              fontSize: '1.5rem',
               letterSpacing: '-0.02em',
             }}
           >
-            <Sparkles size={20} style={{ color: '#c084fc' }} />
+            <Sparkles size={22} style={{ color: '#38bdf8' }} aria-hidden="true" />
             GPT
           </Link>
 
@@ -50,21 +53,19 @@ function App() {
               key={item}
               to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
               style={{
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: '#cbd5e1',
                 textDecoration: 'none',
-                padding: '0.4rem 0.85rem',
+                padding: '0.35rem 0.75rem',
                 borderRadius: '0.5rem',
-                fontSize: '0.9rem',
+                fontSize: '1rem',
                 fontWeight: 500,
-                transition: 'all 0.2s ease',
+                transition: 'color 0.3s ease',
               }}
               onMouseEnter={(e) => {
-                e.target.style.color = 'white'
-                e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)'
+                e.target.style.color = '#ffffff'
               }}
               onMouseLeave={(e) => {
-                e.target.style.color = 'rgba(255, 255, 255, 0.7)'
-                e.target.style.backgroundColor = 'transparent'
+                e.target.style.color = '#cbd5e1'
               }}
             >
               {item}
@@ -80,23 +81,24 @@ function App() {
               display: 'flex',
               alignItems: 'center',
               gap: '0.4rem',
-              color: 'rgba(255, 255, 255, 0.85)',
+              color: '#e2e8f0',
               textDecoration: 'none',
-              padding: '0.5rem 1rem',
-              borderRadius: '0.6rem',
-              fontSize: '0.875rem',
+              padding: '0.625rem 1.5rem',
+              borderRadius: '0.5rem',
+              fontSize: '0.9rem',
               fontWeight: 500,
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              transition: 'all 0.25s ease',
+              border: '1px solid #475569',
+              backgroundColor: 'transparent',
+              transition: 'all 0.3s ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'
+              e.currentTarget.style.borderColor = '#64748b'
+              e.currentTarget.style.backgroundColor = 'rgba(15, 23, 42, 0.6)'
               e.currentTarget.style.transform = 'translateY(-1px)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent'
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)'
+              e.currentTarget.style.borderColor = '#475569'
               e.currentTarget.style.transform = 'translateY(0)'
             }}
           >
@@ -110,24 +112,26 @@ function App() {
               display: 'flex',
               alignItems: 'center',
               gap: '0.4rem',
-              color: 'white',
+              color: '#ffffff',
               textDecoration: 'none',
-              padding: '0.5rem 1.15rem',
-              borderRadius: '0.6rem',
-              fontSize: '0.875rem',
+              padding: '0.625rem 1.5rem',
+              borderRadius: '0.5rem',
+              fontSize: '0.9rem',
               fontWeight: 600,
-              background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+              backgroundColor: '#3b82f6',
               border: 'none',
-              transition: 'all 0.25s ease',
-              boxShadow: '0 2px 10px rgba(168, 85, 247, 0.3)',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-1px)'
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(168, 85, 247, 0.45)'
+              e.currentTarget.style.backgroundColor = '#2563eb'
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.45)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = '0 2px 10px rgba(168, 85, 247, 0.3)'
+              e.currentTarget.style.backgroundColor = '#3b82f6'
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.3)'
             }}
           >
             <UserPlus size={16} />

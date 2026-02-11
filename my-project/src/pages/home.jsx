@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Rocket, Paperclip, Search, BookOpen, Image } from "lucide-react";
+import {
+  Plus,
+  ArrowUpRight,
+  Paperclip,
+  Search,
+  BookOpen,
+  Image,
+} from "lucide-react";
 
 const Home = () => {
   const [query, setQuery] = useState("");
@@ -27,153 +34,97 @@ const Home = () => {
   ];
 
   return (
-    <div className="gradient-bg flex flex-col items-center justify-center px-4"
-      style={{ minHeight: 'calc(100vh - 52px)' }}
-    >
-      {/* Main heading */}
-      <h1
-        className="text-3xl md:text-4xl font-bold text-white mb-8 animate-fade-in-up"
-        style={{
-          textShadow: "0 2px 20px rgba(168, 85, 247, 0.3)",
-          letterSpacing: "-0.02em",
-        }}
-      >
-        What can I help with?
-      </h1>
+    <div className="gradient-bg relative h-screen w-full overflow-hidden flex flex-col items-center justify-center">
+      {/* Planet horizon (background layer) */}
+      <div
+        className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[80%]
+                   w-[150vw] h-[150vw] rounded-full bg-[#020617]
+                   border-t border-t-white/40 shadow-[0_-40px_100px_rgba(59,130,246,0.5)] z-0"
+        aria-hidden="true"
+      />
 
-      {/* Input container */}
-      <div className="w-full max-w-2xl animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+      {/* Content layer */}
+      <div className="relative z-10 flex flex-col items-center px-4">
+        {/* Main heading */}
+        <h1 className="home-title animate-fade-in-up">
+          What can I help with?
+        </h1>
+
+        {/* Input container */}
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            borderRadius: "1rem",
-            padding: "0.5rem 0.5rem 0.5rem 1.25rem",
-            background: isFocused
-              ? "rgba(255, 255, 255, 0.12)"
-              : "rgba(255, 255, 255, 0.08)",
-            border: isFocused
-              ? "1.5px solid rgba(168, 85, 247, 0.5)"
-              : "1.5px solid rgba(255, 255, 255, 0.15)",
-            backdropFilter: "blur(16px)",
-            transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
-            transform: isFocused ? "scale(1.015)" : "scale(1)",
-            boxShadow: isFocused
-              ? "0 0 30px rgba(168, 85, 247, 0.2), 0 8px 32px rgba(0,0,0,0.2)"
-              : "0 4px 16px rgba(0,0,0,0.15)",
-          }}
+          className="home-search-shell animate-fade-in-up w-full max-w-2xl"
+          style={{ animationDelay: "0.15s" }}
         >
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask anything"
-            style={{
-              flex: 1,
-              background: "transparent",
-              outline: "none",
-              color: "white",
-              fontSize: "1rem",
-              border: "none",
-            }}
-            className="placeholder-white/50"
-          />
-
-          {/* Send (Rocket) Button */}
-          <button
-            onClick={handleSend}
-            disabled={!query.trim()}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "2.5rem",
-              height: "2.5rem",
-              borderRadius: "0.75rem",
-              border: "none",
-              cursor: query.trim() ? "pointer" : "default",
-              background: query.trim()
-                ? "linear-gradient(135deg, #a855f7, #ec4899)"
-                : "rgba(255, 255, 255, 0.1)",
-              color: query.trim() ? "white" : "rgba(255, 255, 255, 0.3)",
-              transition: "all 0.3s ease",
-              transform: query.trim() ? "scale(1)" : "scale(0.95)",
-              boxShadow: query.trim()
-                ? "0 4px 15px rgba(168, 85, 247, 0.4)"
-                : "none",
-              flexShrink: 0,
-            }}
-            onMouseEnter={(e) => {
-              if (query.trim()) {
-                e.currentTarget.style.transform = "scale(1.08)";
-                e.currentTarget.style.boxShadow = "0 6px 20px rgba(168, 85, 247, 0.5)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (query.trim()) {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow = "0 4px 15px rgba(168, 85, 247, 0.4)";
-              }
-            }}
-            title="Send"
+          <div
+            className={`home-search-bar ${
+              isFocused ? "home-search-bar--focused" : ""
+            }`}
           >
-            <Rocket size={18} style={{
-              transform: "rotate(45deg)",
-              transition: "transform 0.3s ease",
-            }} />
-          </button>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex flex-wrap gap-2 mt-4 justify-center animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
-          {actionButtons.map(({ label, icon: Icon }) => (
+            {/* Plus button (left) */}
             <button
-              key={label}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.35rem",
-                padding: "0.45rem 1rem",
-                fontSize: "0.8rem",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                borderRadius: "9999px",
-                color: "rgba(255, 255, 255, 0.85)",
-                background: "rgba(255, 255, 255, 0.05)",
-                cursor: "pointer",
-                backdropFilter: "blur(8px)",
-                transition: "all 0.25s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)";
-                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.35)";
-                e.currentTarget.style.transform = "translateY(-1px)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
+              type="button"
+              className="home-icon-button"
+              aria-label="Attach"
             >
-              <Icon size={14} />
-              {label}
+              <Plus size={18} aria-hidden="true" />
             </button>
-          ))}
-        </div>
-      </div>
 
-      {/* Footer */}
-      <p
-        className="text-xs text-white/50 mt-12 text-center max-w-md animate-fade-in"
-        style={{ animationDelay: "0.45s" }}
-      >
-        By messaging ChatGPT, you agree to our{" "}
-        <span className="underline cursor-pointer hover:text-white/70">Terms</span> and have read our{" "}
-        <span className="underline cursor-pointer hover:text-white/70">Privacy Policy</span>.
-      </p>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask anything"
+              className="home-search-input"
+            />
+
+            {/* Send Button (arrow icon) */}
+            <button
+              onClick={handleSend}
+              disabled={!query.trim()}
+              className="home-icon-button home-icon-button--send"
+              title="Send"
+            >
+              <ArrowUpRight size={18} aria-hidden="true" />
+            </button>
+          </div>
+
+          {/* Action buttons */}
+          <div
+            className="home-actions animate-fade-in-up"
+            style={{ animationDelay: "0.3s" }}
+          >
+            {actionButtons.map(({ label, icon: Icon }) => (
+              <button
+                key={label}
+                type="button"
+                className="home-action-button"
+              >
+                <Icon size={14} aria-hidden="true" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <p
+          className="home-privacy text-xs mt-8 text-center max-w-md animate-fade-in"
+          style={{ animationDelay: "0.45s" }}
+        >
+          By messaging ChatGPT, you agree to our{" "}
+          <button type="button" className="home-privacy-link">
+            Terms
+          </button>{" "}
+          and have read our{" "}
+          <button type="button" className="home-privacy-link">
+            Privacy Policy
+          </button>
+          .
+        </p>
+      </div>
     </div>
   );
 };
