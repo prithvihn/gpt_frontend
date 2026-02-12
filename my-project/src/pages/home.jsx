@@ -61,8 +61,8 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
           'Content-Type': 'application/json',
           ...(accessToken
             ? {
-                Authorization: `${tokenType} ${accessToken}`,
-              }
+              Authorization: `${tokenType} ${accessToken}`,
+            }
             : {}),
         },
         body: JSON.stringify({
@@ -103,7 +103,7 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
   }
 
   return (
-    <div className="gradient-bg relative min-h-screen w-full overflow-hidden flex flex-col">
+    <div className="gradient-bg relative min-h-screen w-full overflow-hidden flex flex-col" style={{ position: 'relative' }}>
       {/* Planet horizon (background layer) */}
       <div
         className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[80%]
@@ -114,10 +114,10 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
 
       {/* Chat content */}
       <div
-        className="relative z-10 flex-1 flex justify-center px-4"
+        className="relative z-10 flex-1 flex flex-col"
         style={{ paddingTop: '4.5rem', paddingBottom: '1rem' }}
       >
-        <div className="flex flex-col w-full max-w-3xl">
+        <div className="chat-wrapper" style={{ flex: 1 }}>
           {/* Conversation area (only when there are messages) */}
           {hasMessages && (
             <div className="flex-1 overflow-y-auto space-y-4 pb-4 animate-fade-in">
@@ -157,33 +157,28 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
             </div>
           )}
 
-          {/* Centered hero + input block, which smoothly slides down after first message */}
+          {/* Centered hero + input block */}
           <div
-            className="transition-all duration-500"
-            style={{
-              marginTop: hasMessages ? 'auto' : '10vh',
-              marginBottom: hasMessages ? '0.5rem' : '0',
-            }}
+            className={`transition-all duration-500 ${hasMessages ? 'chat-input-bar' : 'home-container'}`}
           >
             {!hasMessages && (
-              <div className="text-center mb-6">
+              <div className="mb-6" style={{ textAlign: 'center' }}>
                 <h1 className="home-title animate-fade-in-up">
                   What can I help with?
                 </h1>
                 <p
-                  className="home-privacy text-xs mt-2 text-center max-w-md mx-auto animate-fade-in"
-                  style={{ animationDelay: '0.2s' }}
+                  className="home-privacy text-xs mt-2 max-w-md mx-auto animate-fade-in"
+                  style={{ animationDelay: '0.2s', textAlign: 'center' }}
                 >
                   Ask anything and I will respond in a clear, professional tone.
                 </p>
               </div>
             )}
 
-            <div className="home-search-shell w-full max-w-2xl mx-auto animate-fade-in-up">
+            <div className="home-search-shell max-w-2xl animate-fade-in-up" style={{ width: '100%', maxWidth: '672px', margin: '0 auto' }}>
               <div
-                className={`home-search-bar ${
-                  isFocused ? 'home-search-bar--focused' : ''
-                }`}
+                className={`home-search-bar ${isFocused ? 'home-search-bar--focused' : ''
+                  }`}
               >
                 <button
                   type="button"
@@ -216,22 +211,7 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
               </div>
             </div>
 
-            {!hasMessages && (
-              <p
-                className="home-privacy text-xs mt-6 text-center max-w-md mx-auto animate-fade-in"
-                style={{ animationDelay: '0.45s' }}
-              >
-                By messaging GPT, you agree to our{' '}
-                <button type="button" className="home-privacy-link">
-                  Terms
-                </button>{' '}
-                and have read our{' '}
-                <button type="button" className="home-privacy-link">
-                  Privacy Policy
-                </button>
-                .
-              </p>
-            )}
+
           </div>
 
           {error && (
@@ -250,6 +230,31 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
           )}
         </div>
       </div>
+
+      {/* Terms text pinned to bottom center */}
+      {!hasMessages && (
+        <p
+          className="home-privacy text-xs text-center max-w-md animate-fade-in"
+          style={{
+            position: 'fixed',
+            bottom: '1.5rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            animationDelay: '0.45s',
+            zIndex: 20,
+          }}
+        >
+          By messaging GPT, you agree to our{' '}
+          <button type="button" className="home-privacy-link">
+            Terms
+          </button>{' '}
+          and have read our{' '}
+          <button type="button" className="home-privacy-link">
+            Privacy Policy
+          </button>
+          .
+        </p>
+      )}
     </div>
   )
 }

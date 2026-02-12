@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
 import { LogIn, Menu, UserPlus, Sparkles } from 'lucide-react'
 import './App.css'
 import Home from './pages/home'
@@ -105,6 +105,11 @@ function App() {
     localStorage.removeItem('refresh_token')
     localStorage.removeItem('token_type')
     localStorage.removeItem('user_email')
+    localStorage.removeItem('chat_sessions')
+    localStorage.removeItem('active_chat_id')
+    setChatSessions([])
+    setActiveSessionId('')
+    setIsSidebarOpen(false)
     setIsAuthenticated(false)
   }
 
@@ -199,7 +204,7 @@ function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           {isAuthenticated ? (
             <Link
-              to="/login"
+              to="/"
               onClick={handleLogout}
               style={{
                 display: 'flex',
@@ -372,40 +377,54 @@ function App() {
                 paddingRight: '0.25rem',
               }}
             >
-              {chatSessions.map((session) => {
-                const isActive = session.id === activeSessionId
-                return (
-                  <button
-                    key={session.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveSessionId(session.id)
-                      setIsSidebarOpen(false)
-                    }}
-                    style={{
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '0.55rem 0.6rem',
-                      marginBottom: '0.35rem',
-                      borderRadius: '0.6rem',
-                      border: '1px solid rgba(55,65,81,0.85)',
-                      backgroundColor: isActive
-                        ? 'rgba(30,64,175,0.8)'
-                        : 'rgba(15,23,42,0.85)',
-                      color: '#e5e7eb',
-                      fontSize: '0.86rem',
-                      cursor: 'pointer',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                    title={session.title}
-                  >
-                    {session.title}
-                  </button>
-                )
-              })}
-              {chatSessions.length === 0 && (
+              {isAuthenticated ? (
+                <>
+                  {chatSessions.map((session) => {
+                    const isActive = session.id === activeSessionId
+                    return (
+                      <button
+                        key={session.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveSessionId(session.id)
+                          setIsSidebarOpen(false)
+                        }}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '0.55rem 0.6rem',
+                          marginBottom: '0.35rem',
+                          borderRadius: '0.6rem',
+                          border: '1px solid rgba(55,65,81,0.85)',
+                          backgroundColor: isActive
+                            ? 'rgba(30,64,175,0.8)'
+                            : 'rgba(15,23,42,0.85)',
+                          color: '#e5e7eb',
+                          fontSize: '0.86rem',
+                          cursor: 'pointer',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                        title={session.title}
+                      >
+                        {session.title}
+                      </button>
+                    )
+                  })}
+                  {chatSessions.length === 0 && (
+                    <p
+                      style={{
+                        fontSize: '0.8rem',
+                        color: '#6b7280',
+                        padding: '0.35rem 0.25rem',
+                      }}
+                    >
+                      No conversations yet.
+                    </p>
+                  )}
+                </>
+              ) : (
                 <p
                   style={{
                     fontSize: '0.8rem',
@@ -413,7 +432,7 @@ function App() {
                     padding: '0.35rem 0.25rem',
                   }}
                 >
-                  No conversations yet.
+                  Log in to see your chat history.
                 </p>
               )}
             </div>
