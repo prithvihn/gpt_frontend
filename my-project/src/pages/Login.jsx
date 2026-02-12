@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom' // Added useNavigate for redirection
 import { Mail, Lock, Eye, EyeOff, LogIn, Sparkles } from 'lucide-react'
 
-const Login = () => {
+const Login = ({ onLogin }) => {
   const [form, setForm] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
@@ -70,8 +70,12 @@ const Login = () => {
         localStorage.setItem('access_token', data.access_token);
         localStorage.setItem('refresh_token', data.refresh_token);
         localStorage.setItem('token_type', data.token_type);
+        localStorage.setItem('user_email', form.email);
 
         console.log('Login successful');
+        if (typeof onLogin === 'function') {
+          onLogin();
+        }
         
         // 2. Redirect to home page after login
         navigate('/'); 
