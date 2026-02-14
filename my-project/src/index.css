@@ -562,10 +562,14 @@ input:focus-visible {
 
 /* ===== Typing Indicator ===== */
 @keyframes typingBounce {
-  0%, 60%, 100% {
+
+  0%,
+  60%,
+  100% {
     transform: translateY(0);
     opacity: 0.4;
   }
+
   30% {
     transform: translateY(-6px);
     opacity: 1;
@@ -611,9 +615,17 @@ input:focus-visible {
   line-height: 1.3;
 }
 
-.markdown-content h1 { font-size: 1.4em; }
-.markdown-content h2 { font-size: 1.2em; }
-.markdown-content h3 { font-size: 1.05em; }
+.markdown-content h1 {
+  font-size: 1.4em;
+}
+
+.markdown-content h2 {
+  font-size: 1.2em;
+}
+
+.markdown-content h3 {
+  font-size: 1.05em;
+}
 
 .markdown-content strong {
   font-weight: 700;
@@ -737,6 +749,70 @@ input:focus-visible {
 .sidebar-search-input:focus {
   border-color: rgba(59, 130, 246, 0.7);
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* ===== Sidebar Skeleton Loaders ===== */
+@keyframes skeletonPulse {
+
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.sidebar-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sidebar-skeleton-item {
+  height: 2.2rem;
+  border-radius: 0.6rem;
+  background: rgba(148, 163, 184, 0.2);
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.sidebar-skeleton-item:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.sidebar-skeleton-item:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.sidebar-skeleton-item:nth-child(4) {
+  animation-delay: 0.45s;
+}
+
+/* ===== Sidebar Delete Button ===== */
+.sidebar-conv-item .sidebar-delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.4rem;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.2s ease, background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sidebar-conv-item:hover .sidebar-delete-btn {
+  opacity: 1;
+}
+
+.sidebar-delete-btn:hover {
+  color: #f87171 !important;
+  background: rgba(239, 68, 68, 0.15) !important;
 }
 
 /* ===== Responsive Layout ===== */

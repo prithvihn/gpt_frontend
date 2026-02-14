@@ -2,91 +2,144 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowUpRight, Plus } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import {
+  createConversation,
+  saveUserMessage,
+  saveAssistantMessage,
+  sendMessageToAI,
+  getMessages,
+  renameConversation,
+} from '../services/chatAPI'
 
 const SYSTEM_PROMPT =
   'You are a helpful assistant. You may use markdown formatting such as **bold**, *italic*, `code`, code blocks, lists, and headings to make your responses clear and well-structured.'
 
-const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
+const Home = ({
+  currentConversationId,
+  setCurrentConversationId,
+  onConversationCreated,
+  isAuthenticated,
+}) => {
   const [input, setInput] = useState('')
   const [isFocused, setIsFocused] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [messagesLoading, setMessagesLoading] = useState(false)
   const [error, setError] = useState('')
+  const [messages, setMessages] = useState([])
   const messagesEndRef = useRef(null)
 
-  const activeSession = useMemo(
-    () => chatSessions.find((s) => s.id === activeSessionId) || { messages: [] },
-    [chatSessions, activeSessionId],
-  )
-
-  const messages = activeSession.messages || []
   const hasMessages = messages.length > 0
 
+  // Load messages when active conversation changes
+  useEffect(() => {
+    if (!currentConversationId || !isAuthenticated) {
+      setMessages([])
+      return
+    }
+    let cancelled = false
+    const load = async () => {
+      setMessagesLoading(true)
+      try {
+        const msgs = await getMessages(currentConversationId)
+        if (!cancelled) setMessages(msgs)
+      } catch (err) {
+        console.error('Failed to load messages:', err)
+        if (!cancelled) setMessages([])
+      } finally {
+        if (!cancelled) setMessagesLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [currentConversationId, isAuthenticated])
+
+  // Clear messages when user logs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setMessages([])
+    }
+  }, [isAuthenticated])
+
+  // Auto-scroll
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
     }
   }, [messages.length, isLoading])
 
-  const buildConversationText = (nextUserMessage) => {
-    const allMessages = [...messages, nextUserMessage]
-    return allMessages
+  const buildConversationText = (allMsgs) => {
+    return allMsgs
       .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
       .join('\n')
   }
 
   const handleSend = async () => {
     const trimmed = input.trim()
-    if (!trimmed || !activeSessionId) return
+    if (!trimmed) return
 
-    const userMessage = {
-      id: `${Date.now()}-u`,
-      role: 'user',
-      content: trimmed,
-      createdAt: new Date().toISOString(),
-    }
-
-    const nextMessages = [...messages, userMessage]
-    onUpdateSessionMessages(activeSessionId, nextMessages)
     setInput('')
     setError('')
     setIsLoading(true)
 
+    // Optimistic UI — show user message immediately
+    const tempUserMsg = {
+      id: `temp-${Date.now()}-u`,
+      role: 'user',
+      content: trimmed,
+      created_at: new Date().toISOString(),
+    }
+    setMessages((prev) => [...prev, tempUserMsg])
+
     try {
-      const accessToken = localStorage.getItem('access_token')
-      const tokenType = localStorage.getItem('token_type') || 'Bearer'
-
-      const conversationText = buildConversationText(userMessage)
-
-      const response = await fetch('http://127.0.0.1:8000/ask', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken
-            ? {
-              Authorization: `${tokenType} ${accessToken}`,
-            }
-            : {}),
-        },
-        body: JSON.stringify({
-          message: conversationText,
-          system_prompt: SYSTEM_PROMPT,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.detail || 'The assistant could not respond.')
+      // 1. Create conversation if none exists
+      let convId = currentConversationId
+      if (!convId && isAuthenticated) {
+        const conv = await createConversation('New Chat')
+        convId = conv.id
+        setCurrentConversationId(convId)
+        onConversationCreated?.(conv)
       }
 
-      const assistantMessage = {
-        id: `${Date.now()}-a`,
+      // 2. Save user message to DB
+      let savedUserMsg = tempUserMsg
+      if (convId && isAuthenticated) {
+        savedUserMsg = await saveUserMessage(convId, trimmed)
+        // Replace temp message with saved one
+        setMessages((prev) =>
+          prev.map((m) => (m.id === tempUserMsg.id ? savedUserMsg : m)),
+        )
+      }
+
+      // 3. Get AI response
+      const allMsgs = [...messages, savedUserMsg]
+      const conversationText = buildConversationText(allMsgs)
+      const aiData = await sendMessageToAI(conversationText, SYSTEM_PROMPT)
+      const aiContent = aiData.response || ''
+
+      // 4. Save assistant message to DB
+      let assistantMsg = {
+        id: `temp-${Date.now()}-a`,
         role: 'assistant',
-        content: data.response || '',
-        createdAt: new Date().toISOString(),
+        content: aiContent,
+        created_at: new Date().toISOString(),
       }
 
-      onUpdateSessionMessages(activeSessionId, [...nextMessages, assistantMessage])
+      if (convId && isAuthenticated) {
+        assistantMsg = await saveAssistantMessage(convId, aiContent)
+      }
+
+      setMessages((prev) => [...prev, assistantMsg])
+
+      // 5. Auto-rename conversation to first user message
+      if (convId && isAuthenticated && messages.length === 0) {
+        const title = trimmed.length > 40 ? `${trimmed.slice(0, 40)}…` : trimmed
+        try {
+          await renameConversation(convId, title)
+          onConversationCreated?.({ id: convId, title })
+        } catch {
+          // Non-critical — silently ignore rename failures
+        }
+      }
     } catch (err) {
       console.error('Chat error:', err)
       setError(
@@ -120,8 +173,15 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
         style={{ paddingTop: '4.5rem', paddingBottom: '1rem' }}
       >
         <div className="chat-wrapper" style={{ flex: 1 }}>
+          {/* Messages loading spinner */}
+          {messagesLoading && (
+            <div className="flex justify-center items-center py-12 animate-fade-in">
+              <span className="loader-spinner" style={{ width: '2rem', height: '2rem' }} />
+            </div>
+          )}
+
           {/* Conversation area (only when there are messages) */}
-          {hasMessages && (
+          {!messagesLoading && hasMessages && (
             <div className="chat-messages-container animate-fade-in">
               {messages.map((message) => {
                 const isUser = message.role === 'user'
@@ -193,7 +253,7 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
           <div
             className={`transition-all duration-500 ${hasMessages ? 'chat-input-bar' : 'home-container'}`}
           >
-            {!hasMessages && (
+            {!hasMessages && !messagesLoading && (
               <div className="mb-6" style={{ textAlign: 'center' }}>
                 <h1 className="home-title animate-fade-in-up">
                   What can I help with?
@@ -246,8 +306,6 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
                 </button>
               </div>
             </div>
-
-
           </div>
 
           {error && (
@@ -268,7 +326,7 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
       </div>
 
       {/* Terms text pinned to bottom center */}
-      {!hasMessages && (
+      {!hasMessages && !messagesLoading && (
         <p
           className="home-privacy text-xs text-center max-w-md animate-fade-in"
           style={{

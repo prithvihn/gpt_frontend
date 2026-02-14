@@ -1,110 +1,105 @@
-import React, { useEffect, useState, useMemo } from 'react'
-import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
-import { LogIn, Menu, UserPlus, Sparkles, Search } from 'lucide-react'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import { LogIn, Menu, UserPlus, Sparkles, Search, Trash2 } from 'lucide-react'
 import './App.css'
 import Home from './pages/home'
 import About from './pages/About'
 import Contact from './pages/Contact'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import {
+  getConversations,
+  createConversation,
+  deleteConversation as deleteConversationAPI,
+} from './services/chatAPI'
 
 function App() {
-  const loadStoredSessions = () => {
-    try {
-      const raw = localStorage.getItem('chat_sessions')
-      if (!raw) return []
-      const parsed = JSON.parse(raw)
-      return Array.isArray(parsed) ? parsed : []
-    } catch {
-      return []
-    }
-  }
-
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => !!localStorage.getItem('access_token'),
   )
-  const [chatSessions, setChatSessions] = useState(loadStoredSessions)
-  const [activeSessionId, setActiveSessionId] = useState(() => {
-    const storedActive = localStorage.getItem('active_chat_id')
-    if (storedActive) return storedActive
-    const sessions = loadStoredSessions()
-    return sessions[0]?.id || ''
-  })
+  const [conversations, setConversations] = useState([])
+  const [currentConversationId, setCurrentConversationId] = useState(null)
+  const [loadingConversations, setLoadingConversations] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredSessions = useMemo(() => {
-    if (!searchQuery.trim()) return chatSessions
+  const filteredConversations = useMemo(() => {
+    if (!searchQuery.trim()) return conversations
     const q = searchQuery.toLowerCase()
-    return chatSessions.filter((s) => s.title.toLowerCase().includes(q))
-  }, [chatSessions, searchQuery])
+    return conversations.filter((c) => c.title.toLowerCase().includes(q))
+  }, [conversations, searchQuery])
 
+  // Load conversations from API when authenticated
+  const loadConversations = useCallback(async () => {
+    if (!localStorage.getItem('access_token')) return
+    setLoadingConversations(true)
+    try {
+      const data = await getConversations()
+      setConversations(data)
+    } catch (err) {
+      console.error('Failed to load conversations:', err)
+      setConversations([])
+    } finally {
+      setLoadingConversations(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadConversations()
+    } else {
+      setConversations([])
+      setCurrentConversationId(null)
+    }
+  }, [isAuthenticated, loadConversations])
+
+  // Listen for auth changes across tabs
   useEffect(() => {
     const handleStorageChange = (event) => {
       if (event.key === 'access_token') {
         setIsAuthenticated(!!event.newValue)
       }
     }
-
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
-  useEffect(() => {
-    if (chatSessions.length === 0) {
-      const id = Date.now().toString()
-      const firstSession = {
-        id,
-        title: 'New Chat',
-        createdAt: new Date().toISOString(),
-        messages: [],
+  // Called by Home when a new conversation is created or renamed
+  const handleConversationCreated = useCallback((conv) => {
+    setConversations((prev) => {
+      const exists = prev.find((c) => c.id === conv.id)
+      if (exists) {
+        // Update existing (e.g. rename)
+        return prev.map((c) => (c.id === conv.id ? { ...c, ...conv } : c))
       }
-      setChatSessions([firstSession])
-      setActiveSessionId(id)
-    }
-  }, [chatSessions.length])
-
-  useEffect(() => {
-    localStorage.setItem('chat_sessions', JSON.stringify(chatSessions))
-  }, [chatSessions])
-
-  useEffect(() => {
-    if (activeSessionId) {
-      localStorage.setItem('active_chat_id', activeSessionId)
-    }
-  }, [activeSessionId])
-
-  const updateSessionMessages = (sessionId, newMessages) => {
-    setChatSessions((prev) =>
-      prev.map((session) => {
-        if (session.id !== sessionId) return session
-        const firstUserMessage = newMessages.find(
-          (m) => m.role === 'user' && m.content?.trim(),
-        )
-        let title = firstUserMessage?.content?.trim() || 'New Chat'
-        if (title.length > 40) {
-          title = `${title.slice(0, 40)}…`
-        }
-        return {
-          ...session,
-          messages: newMessages,
-          title,
-        }
-      }),
-    )
-  }
+      // Add new at the top
+      return [{ ...conv, created_at: conv.created_at || new Date().toISOString() }, ...prev]
+    })
+  }, [])
 
   const handleNewChat = () => {
-    const id = Date.now().toString()
-    const newSession = {
-      id,
-      title: 'New Chat',
-      createdAt: new Date().toISOString(),
-      messages: [],
-    }
-    setChatSessions((prev) => [...prev, newSession])
-    setActiveSessionId(id)
+    setCurrentConversationId(null)
     setIsSidebarOpen(false)
+  }
+
+  const handleSelectConversation = (convId) => {
+    setCurrentConversationId(convId)
+    setIsSidebarOpen(false)
+  }
+
+  const handleDeleteConversation = async (e, convId) => {
+    e.stopPropagation()
+    if (!window.confirm('Delete this conversation?')) return
+    try {
+      await deleteConversationAPI(convId)
+      setConversations((prev) => prev.filter((c) => c.id !== convId))
+      if (currentConversationId === convId) {
+        setCurrentConversationId(null)
+      }
+    } catch (err) {
+      console.error('Failed to delete conversation:', err)
+      alert('Failed to delete conversation. Please try again.')
+    }
   }
 
   const handleLogout = () => {
@@ -112,12 +107,14 @@ function App() {
     localStorage.removeItem('refresh_token')
     localStorage.removeItem('token_type')
     localStorage.removeItem('user_email')
-    localStorage.removeItem('chat_sessions')
-    localStorage.removeItem('active_chat_id')
-    setChatSessions([])
-    setActiveSessionId('')
+    setConversations([])
+    setCurrentConversationId(null)
     setIsSidebarOpen(false)
     setIsAuthenticated(false)
+  }
+
+  const handleLogin = () => {
+    setIsAuthenticated(true)
   }
 
   const currentUserEmail = localStorage.getItem('user_email') || ''
@@ -398,40 +395,64 @@ function App() {
             >
               {isAuthenticated ? (
                 <>
-                  {filteredSessions.map((session) => {
-                    const isActive = session.id === activeSessionId
+                  {/* Loading skeleton */}
+                  {loadingConversations && conversations.length === 0 && (
+                    <div className="sidebar-skeleton-list">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="sidebar-skeleton-item" />
+                      ))}
+                    </div>
+                  )}
+
+                  {filteredConversations.map((conv) => {
+                    const isActive = conv.id === currentConversationId
                     return (
-                      <button
-                        key={session.id}
-                        type="button"
-                        onClick={() => {
-                          setActiveSessionId(session.id)
-                          setIsSidebarOpen(false)
-                        }}
+                      <div
+                        key={conv.id}
+                        className="sidebar-conv-item"
                         style={{
-                          width: '100%',
-                          textAlign: 'left',
-                          padding: '0.55rem 0.6rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
                           marginBottom: '0.35rem',
-                          borderRadius: '0.6rem',
-                          border: '1px solid rgba(55,65,81,0.85)',
-                          backgroundColor: isActive
-                            ? 'rgba(30,64,175,0.8)'
-                            : 'rgba(15,23,42,0.85)',
-                          color: '#e5e7eb',
-                          fontSize: '0.86rem',
-                          cursor: 'pointer',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
                         }}
-                        title={session.title}
                       >
-                        {session.title}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectConversation(conv.id)}
+                          style={{
+                            flex: 1,
+                            textAlign: 'left',
+                            padding: '0.55rem 0.6rem',
+                            borderRadius: '0.6rem',
+                            border: '1px solid rgba(55,65,81,0.85)',
+                            backgroundColor: isActive
+                              ? 'rgba(30,64,175,0.8)'
+                              : 'rgba(15,23,42,0.85)',
+                            color: '#e5e7eb',
+                            fontSize: '0.86rem',
+                            cursor: 'pointer',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                          title={conv.title}
+                        >
+                          {conv.title}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteConversation(e, conv.id)}
+                          className="sidebar-delete-btn"
+                          title="Delete conversation"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     )
                   })}
-                  {filteredSessions.length === 0 && (
+
+                  {!loadingConversations && filteredConversations.length === 0 && (
                     <p
                       style={{
                         fontSize: '0.8rem',
@@ -479,15 +500,16 @@ function App() {
           path="/"
           element={
             <Home
-              activeSessionId={activeSessionId}
-              chatSessions={chatSessions}
-              onUpdateSessionMessages={updateSessionMessages}
+              currentConversationId={currentConversationId}
+              setCurrentConversationId={setCurrentConversationId}
+              onConversationCreated={handleConversationCreated}
+              isAuthenticated={isAuthenticated}
             />
           }
         />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/login" element={<Login onLogin={() => setIsAuthenticated(true)} />} />
+        <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/signup" element={<Signup />} />
       </Routes>
     </Router>
