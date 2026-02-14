@@ -287,7 +287,7 @@ const Home = ({
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Message GPT"
+                  placeholder="Message Lunex"
                   className="home-search-input"
                   disabled={isLoading}
                 />
@@ -338,7 +338,7 @@ const Home = ({
             zIndex: 20,
           }}
         >
-          By messaging GPT, you agree to our{' '}
+          By messaging Lunex, you agree to our{' '}
           <button type="button" className="home-privacy-link">
             Terms
           </button>{' '}

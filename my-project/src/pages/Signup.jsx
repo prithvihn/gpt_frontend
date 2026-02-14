@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import lunexLogo from '../assets/lunex-logo.svg';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +14,50 @@ const Signup = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const canvasRef = useRef(null);
+
+  // Star particle background
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId;
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const stars = Array.from({ length: 60 }, () => ({
+      x: Math.random() * canvas.offsetWidth,
+      y: Math.random() * canvas.offsetHeight,
+      r: Math.random() * 1.2 + 0.3,
+      opacity: Math.random() * 0.5 + 0.1,
+      speed: Math.random() * 0.3 + 0.05,
+      phase: Math.random() * Math.PI * 2,
+    }));
+
+    const draw = (t) => {
+      ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+      stars.forEach((s) => {
+        const flicker = 0.5 + 0.5 * Math.sin(t * 0.001 * s.speed + s.phase);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(148, 180, 255, ${s.opacity * flicker})`;
+        ctx.fill();
+      });
+      animId = requestAnimationFrame(draw);
+    };
+    animId = requestAnimationFrame(draw);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -74,11 +119,24 @@ const Signup = () => {
   return (
     <div
       className="gradient-bg flex items-center justify-center px-4 py-8"
-      style={{ minHeight: 'calc(100vh - 52px)' }}
+      style={{ minHeight: 'calc(100vh - 52px)', position: 'relative' }}
     >
+      {/* Star particle canvas */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
+      />
+
       <div
-        className="glass-card animate-fade-in-up"
-        style={{ width: '100%', maxWidth: '26rem', padding: '2.5rem 2rem' }}
+        className="glass-card animate-fade-in-up signup-card-premium"
+        style={{ width: '100%', maxWidth: '26rem', padding: '2.5rem 2rem', position: 'relative', zIndex: 1 }}
       >
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div
@@ -86,15 +144,15 @@ const Signup = () => {
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: '3.5rem',
-              height: '3.5rem',
+              width: '3.75rem',
+              height: '3.75rem',
               borderRadius: '1rem',
-              background:
-                'linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(236, 72, 153, 0.3))',
+              background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.2))',
               marginBottom: '1rem',
+              boxShadow: '0 0 24px rgba(56, 189, 248, 0.15)',
             }}
           >
-            <Sparkles size={28} style={{ color: '#c084fc' }} />
+            <img src={lunexLogo} alt="Lunex" width={32} height={32} />
           </div>
           <h2
             style={{
@@ -102,12 +160,27 @@ const Signup = () => {
               fontSize: '1.6rem',
               fontWeight: 700,
               marginBottom: '0.4rem',
+              fontFamily: "'Inter', sans-serif",
             }}
           >
-            Create account
+            Create Your{' '}
+            <span>
+              Lune
+              <span
+                style={{
+                  background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                x
+              </span>
+            </span>{' '}
+            Account
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>
-            Sign up to get started
+            Start exploring intelligent space
           </p>
         </div>
 
@@ -192,7 +265,7 @@ const Signup = () => {
 
           <button
             type="submit"
-            className="btn-primary"
+            className="btn-primary btn-signup-premium"
             disabled={loading}
             style={{
               width: '100%',
@@ -202,9 +275,10 @@ const Signup = () => {
               gap: '0.5rem',
               fontSize: '1rem',
               padding: '0.85rem',
+              background: 'linear-gradient(135deg, #1E3A8A, #3B82F6)',
             }}
           >
-            {loading ? 'Creating account...' : 'Sign Up'}
+            {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
 

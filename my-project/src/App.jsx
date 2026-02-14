@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
-import { LogIn, Menu, UserPlus, Sparkles, Search, Trash2 } from 'lucide-react'
+import { LogIn, Menu, UserPlus, Search, Trash2 } from 'lucide-react'
+import lunexLogo from './assets/lunex-logo.svg'
 import './App.css'
 import Home from './pages/home'
 import About from './pages/About'
@@ -170,13 +171,26 @@ function App() {
               color: '#ffffff',
               marginRight: '2rem',
               textDecoration: 'none',
-              fontWeight: 700,
+              fontWeight: 600,
               fontSize: '1.5rem',
               letterSpacing: '-0.02em',
+              fontFamily: "'Inter', sans-serif",
             }}
           >
-            <Sparkles size={22} style={{ color: '#38bdf8' }} aria-hidden="true" />
-            GPT
+            <img src={lunexLogo} alt="Lunex logo" width={28} height={28} style={{ display: 'block' }} />
+            <span>
+              Lune
+              <span
+                style={{
+                  background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                x
+              </span>
+            </span>
           </Link>
 
           {['Home', 'About', 'Contact'].map((item) => (
