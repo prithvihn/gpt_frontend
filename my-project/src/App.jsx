@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
-import { LogIn, Menu, UserPlus, Sparkles } from 'lucide-react'
+import { LogIn, Menu, UserPlus, Sparkles, Search } from 'lucide-react'
 import './App.css'
 import Home from './pages/home'
 import About from './pages/About'
@@ -31,6 +31,13 @@ function App() {
     return sessions[0]?.id || ''
   })
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredSessions = useMemo(() => {
+    if (!searchQuery.trim()) return chatSessions
+    const q = searchQuery.toLowerCase()
+    return chatSessions.filter((s) => s.title.toLowerCase().includes(q))
+  }, [chatSessions, searchQuery])
 
   useEffect(() => {
     const handleStorageChange = (event) => {
@@ -357,6 +364,18 @@ function App() {
               New Chat
             </button>
 
+            {/* Sidebar search */}
+            <div className="sidebar-search-wrapper">
+              <Search size={14} className="sidebar-search-icon" />
+              <input
+                type="text"
+                placeholder="Search chats…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="sidebar-search-input"
+              />
+            </div>
+
             <div
               style={{
                 fontSize: '0.8rem',
@@ -379,7 +398,7 @@ function App() {
             >
               {isAuthenticated ? (
                 <>
-                  {chatSessions.map((session) => {
+                  {filteredSessions.map((session) => {
                     const isActive = session.id === activeSessionId
                     return (
                       <button
@@ -412,7 +431,7 @@ function App() {
                       </button>
                     )
                   })}
-                  {chatSessions.length === 0 && (
+                  {filteredSessions.length === 0 && (
                     <p
                       style={{
                         fontSize: '0.8rem',
@@ -420,7 +439,7 @@ function App() {
                         padding: '0.35rem 0.25rem',
                       }}
                     >
-                      No conversations yet.
+                      {searchQuery.trim() ? 'No matching chats.' : 'No conversations yet.'}
                     </p>
                   )}
                 </>

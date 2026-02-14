@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowUpRight, Plus } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 const SYSTEM_PROMPT =
-  'You are a helpful assistant. Always respond in plain text without using markdown, and keep a clear, professional tone.'
+  'You are a helpful assistant. You may use markdown formatting such as **bold**, *italic*, `code`, code blocks, lists, and headings to make your responses clear and well-structured.'
 
 const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
   const [input, setInput] = useState('')
@@ -23,7 +25,7 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
     }
-  }, [messages.length])
+  }, [messages.length, isLoading])
 
   const buildConversationText = (nextUserMessage) => {
     const allMessages = [...messages, nextUserMessage]
@@ -120,7 +122,7 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
         <div className="chat-wrapper" style={{ flex: 1 }}>
           {/* Conversation area (only when there are messages) */}
           {hasMessages && (
-            <div className="flex-1 overflow-y-auto space-y-4 pb-4 animate-fade-in">
+            <div className="chat-messages-container animate-fade-in">
               {messages.map((message) => {
                 const isUser = message.role === 'user'
                 return (
@@ -129,6 +131,7 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
                     className="w-full flex"
                     style={{
                       justifyContent: isUser ? 'flex-end' : 'flex-start',
+                      marginBottom: '1rem',
                     }}
                   >
                     <div
@@ -142,17 +145,46 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
                         color: '#e5e7eb',
                         fontSize: '0.95rem',
                         lineHeight: 1.5,
-                        whiteSpace: 'pre-wrap',
+                        whiteSpace: isUser ? 'pre-wrap' : 'normal',
                         boxShadow: isUser
                           ? '0 10px 25px rgba(37,99,235,0.5)'
                           : '0 10px 30px rgba(15,23,42,0.9)',
                       }}
+                      className={!isUser ? 'markdown-content' : ''}
                     >
-                      {message.content}
+                      {isUser ? (
+                        message.content
+                      ) : (
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {message.content}
+                        </ReactMarkdown>
+                      )}
                     </div>
                   </div>
                 )
               })}
+
+              {/* Typing indicator */}
+              {isLoading && (
+                <div className="w-full flex" style={{ justifyContent: 'flex-start', marginBottom: '1rem' }}>
+                  <div
+                    style={{
+                      maxWidth: '80%',
+                      padding: '0.85rem 1.25rem',
+                      borderRadius: '0.9rem',
+                      backgroundColor: 'rgba(15,23,42,0.95)',
+                      boxShadow: '0 10px 30px rgba(15,23,42,0.9)',
+                    }}
+                  >
+                    <div className="typing-indicator">
+                      <span className="typing-dot" />
+                      <span className="typing-dot" />
+                      <span className="typing-dot" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
           )}
@@ -206,7 +238,11 @@ const Home = ({ activeSessionId, chatSessions, onUpdateSessionMessages }) => {
                   className="home-icon-button home-icon-button--send"
                   title="Send"
                 >
-                  <ArrowUpRight size={18} aria-hidden="true" />
+                  {isLoading ? (
+                    <span className="loader-spinner" />
+                  ) : (
+                    <ArrowUpRight size={18} aria-hidden="true" />
+                  )}
                 </button>
               </div>
             </div>
